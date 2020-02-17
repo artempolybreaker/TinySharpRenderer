@@ -1,6 +1,7 @@
 using System;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using Math = System.Math;
 
 namespace TinyRendererConsoleApp
 {
@@ -30,7 +31,7 @@ namespace TinyRendererConsoleApp
         
         public static void SetLine3(Image<Rgba32> image, int x0, int y0, int x1, int y1, Rgba32 color)
         {
-            var steep = Math.Abs(x0 - x1) < Math.Abs(y0 - y1);
+            var steep = System.Math.Abs(x0 - x1) < System.Math.Abs(y0 - y1);
             if (steep)
             {
                 var tmp = x0;
@@ -146,7 +147,7 @@ namespace TinyRendererConsoleApp
                 y1 = tmp;
             }
 
-            var dx = Math.Abs(x1 - x0);
+            var dx = System.Math.Abs(x1 - x0);
             var dy = Math.Abs(y1 - y0);
             int derror2 = dy * 2;
             int error2 = 0;
