@@ -5,6 +5,9 @@ using System.IO;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
+using SixLabors.Primitives;
 
 namespace TinyRendererConsoleApp
 {
@@ -20,42 +23,50 @@ namespace TinyRendererConsoleApp
             // Renderer.SetLine5(image, 13, 20, 80, 40, Rgba32.Yellow);
             // Renderer.SetLine5(image, 20, 13, 40, 80, Rgba32.White);
             // Renderer.SetLine5(image, 80, 40, 13, 20, Rgba32.Red);
-            
+
             // Test(image);
 
             List<math.float3> vertices = new List<math.float3>();
             List<int> faces = new List<int>();
             // PARSE FILE
             ParseObjFile(vertices, faces);
-            
+
             // RENDER WIRE
-            for (int i = 0; i < faces.Count; i++)
+            for (int i = 0; i < faces.Count; i+=3)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    var v0 = vertices[faces[j]];
-                    var v1 = vertices[faces[(j + 1) % 3]];
+                    var v0 = vertices[faces[j + i]];
+                    var v1 = vertices[faces[(j + 1) % 3 + i]];
 
-                    int x0 = (int) ((v0.x + 1f) * width / 2f);
-                    int y0 = (int) ((v0.y + 1f) * height / 2f);
-                    int x1 = (int) ((v1.x + 1f) * width / 2f);
-                    int y1 = (int) ((v1.y + 1f) * height / 2f);
-                    
-                    Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
+                    int x0 = (int) ((v0.x + 1f) * (width - 1) / 2f);
+                    int y0 = (int) ((v0.y + 1f) * (height - 1) / 2f);
+                    int x1 = (int) ((v1.x + 1f) * (width - 1) / 2f);
+                    int y1 = (int) ((v1.y + 1f) * (height - 1) / 2f);
+
+                    try
+                    {
+                        Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
+                    }
+                    catch (IndexOutOfRangeException e)
+                    {
+                        Console.Write($"Out of bounds exception, coords were: v0:({x0},{y0}), v1:({x1},{y1})");
+                        return;
+                    }
                 }
             }
-            
+
             // SAVE TO DISK
             var encoder = new PngEncoder()
             {
                 CompressionLevel = 1,
             };
-            
+
             if (!Directory.Exists("output/"))
             {
                 Directory.CreateDirectory("output/");
             }
-            
+            image.Mutate(new RotateProcessor(180f, new Size(width, height)));
             image.Save("output/dude.png", encoder);
         }
 
@@ -63,7 +74,8 @@ namespace TinyRendererConsoleApp
         {
             using var reader =
                 new StreamReader(
-                    File.OpenRead("D:/PROJECTS/C#/TinyRenderer/TinyRenderer/TinyRendererConsoleApp/data/objModels/african_head.obj"));
+                    File.OpenRead(
+                        "D:/PROJECTS/C#/TinyRenderer/TinyRenderer/TinyRendererConsoleApp/data/objModels/african_head.obj"));
 
             while (!reader.EndOfStream)
             {
@@ -76,6 +88,7 @@ namespace TinyRendererConsoleApp
                 if (line.Contains("v "))
                 {
                     line = line.Remove(0, 2);
+                    line = line.Trim();
                     var bar = line.Split(' ');
                     vertices.Add(new math.float3()
                     {
@@ -86,6 +99,7 @@ namespace TinyRendererConsoleApp
                 }
                 else if (line.Contains("f "))
                 {
+                    line = line.Trim();
                     line = line.Remove(0, 2);
                     var indices = line.Split(' ');
                     for (int i = 0; i < indices.Length; i++)
@@ -137,7 +151,7 @@ namespace TinyRendererConsoleApp
 
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
-            
+
             sw.Restart();
 
             for (int i = 0; i < 1000000; i++)
@@ -148,7 +162,7 @@ namespace TinyRendererConsoleApp
             }
 
             sw.Stop();
-            Console.WriteLine(sw.ElapsedMilliseconds);       
+            Console.WriteLine(sw.ElapsedMilliseconds);
         }
     }
 }
