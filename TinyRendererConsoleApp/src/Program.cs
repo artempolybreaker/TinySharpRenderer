@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using SixLabors.Primitives;
+using TinyRendererConsoleApp.math;
 
 namespace TinyRendererConsoleApp
 {
@@ -26,36 +27,21 @@ namespace TinyRendererConsoleApp
 
             // Test(image);
 
-            List<math.float3> vertices = new List<math.float3>();
-            List<int> faces = new List<int>();
-            // PARSE FILE
-            ParseObjFile(vertices, faces);
-
-            // RENDER WIRE
-            for (int i = 0; i < faces.Count; i+=3)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    var v0 = vertices[faces[j + i]];
-                    var v1 = vertices[faces[(j + 1) % 3 + i]];
-
-                    int x0 = (int) ((v0.x + 1f) * (width - 1) / 2f);
-                    int y0 = (int) ((v0.y + 1f) * (height - 1) / 2f);
-                    int x1 = (int) ((v1.x + 1f) * (width - 1) / 2f);
-                    int y1 = (int) ((v1.y + 1f) * (height - 1) / 2f);
-
-                    try
-                    {
-                        Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
-                    }
-                    catch (IndexOutOfRangeException e)
-                    {
-                        Console.Write($"Out of bounds exception, coords were: v0:({x0},{y0}), v1:({x1},{y1})");
-                        return;
-                    }
-                }
-            }
-
+            // RenderObjFile();
+            
+            int2 p0 = new int2(10, 70);
+            int2 p1 = new int2(50, 160);
+            int2 p2 = new int2(70, 80);
+            int2 p3 = new int2(180, 50);
+            int2 p4 = new int2(150, 1);
+            int2 p5 = new int2(70, 180);
+            int2 p6 = new int2(180, 150);
+            int2 p7 = new int2(120, 160);
+            int2 p8 = new int2(130, 180);
+            Renderer.Triangle(p0, p1, p2, image, Rgba32.Red);
+            Renderer.Triangle(p3, p4, p5, image, Rgba32.White);
+            Renderer.Triangle(p6, p7, p8, image, Rgba32.Gold);
+            
             // SAVE TO DISK
             var encoder = new PngEncoder()
             {
@@ -66,11 +52,10 @@ namespace TinyRendererConsoleApp
             {
                 Directory.CreateDirectory("output/");
             }
-            image.Mutate(new RotateProcessor(180f, new Size(width, height)));
-            image.Save("output/dude.png", encoder);
+            image.Save("output/image.png", encoder);
         }
 
-        private static void ParseObjFile(List<math.float3> vertices, List<int> faces)
+        private static void ParseObjFile(List<float3> vertices, List<int> faces)
         {
             using var reader =
                 new StreamReader(
@@ -90,7 +75,7 @@ namespace TinyRendererConsoleApp
                     line = line.Remove(0, 2);
                     line = line.Trim();
                     var bar = line.Split(' ');
-                    vertices.Add(new math.float3()
+                    vertices.Add(new float3()
                     {
                         x = float.Parse(bar[0]),
                         y = float.Parse(bar[1]),
@@ -114,6 +99,56 @@ namespace TinyRendererConsoleApp
             Console.WriteLine(faces.Count);
         }
 
+        private static void RenderObjFile()
+        {
+            var width = 512;
+            var height = 512;
+            using var image = new Image<Rgba32>(width, height);
+            List<float3> vertices = new List<float3>();
+            List<int> faces = new List<int>();
+
+            //PARSE FILE
+            ParseObjFile(vertices, faces);
+
+            //RENDER WIRE
+            for (int i = 0; i < faces.Count; i+=3)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    var v0 = vertices[faces[j + i]];
+                    var v1 = vertices[faces[(j + 1) % 3 + i]];
+            
+                    int x0 = (int) ((v0.x + 1f) * (width - 1) / 2f);
+                    int y0 = (int) ((v0.y + 1f) * (height - 1) / 2f);
+                    int x1 = (int) ((v1.x + 1f) * (width - 1) / 2f);
+                    int y1 = (int) ((v1.y + 1f) * (height - 1) / 2f);
+            
+                    try
+                    {
+                        Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
+                    }
+                    catch (IndexOutOfRangeException e)
+                    {
+                        Console.Write($"Out of bounds exception, coords were: v0:({x0},{y0}), v1:({x1},{y1})");
+                        return;
+                    }
+                }
+            }
+            
+            image.Mutate(new RotateProcessor(180f, new Size(width, height)));
+            
+            // SAVE TO DISK
+            var encoder = new PngEncoder()
+            {
+                CompressionLevel = 1,
+            };
+
+            if (!Directory.Exists("output/"))
+            {
+                Directory.CreateDirectory("output/");
+            }
+            image.Save("output/dude.png", encoder);
+        }
         private static void Test(Image<Rgba32> image)
         {
             Stopwatch sw = new Stopwatch();
@@ -156,9 +191,9 @@ namespace TinyRendererConsoleApp
 
             for (int i = 0; i < 1000000; i++)
             {
-                Renderer.SetLine6(image, 13, 20, 80, 40, Rgba32.Yellow);
-                Renderer.SetLine6(image, 20, 13, 40, 80, Rgba32.White);
-                Renderer.SetLine6(image, 80, 40, 13, 20, Rgba32.Red);
+                Renderer.SetLine6(image, new int2(13, 20), new int2(80, 40), Rgba32.Yellow);
+                Renderer.SetLine6(image, new int2(20, 13), new int2(40, 80), Rgba32.White);
+                Renderer.SetLine6(image, new int2(80, 40), new int2(13, 20), Rgba32.Red);
             }
 
             sw.Stop();
