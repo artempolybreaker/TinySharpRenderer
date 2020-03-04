@@ -238,7 +238,7 @@ namespace TinyRendererConsoleApp
             if (t1.y > t2.y) (t1, t2) = (t2, t1);
 
             int totalHeight = t2.y - t0.y;
-            int segmentHeight = t1.y - t0.y + 1;
+            int segmentHeight = t1.y - t0.y ;
 
             for (var y = t0.y; y <= t1.y; y++)
             {
@@ -250,11 +250,27 @@ namespace TinyRendererConsoleApp
                 
                 image[a.x, y] = Rgba32.Red;
                 image[b.x, y] = Rgba32.Yellow;
+                
+                SetLine6(image, new int2(a.x, y), new int2(b.x, y), Rgba32.Blue);
             }
-            
-            // SetLine6(image, t0, t1, Rgba32.Yellow);
-            // SetLine6(image, t1, t2, Rgba32.Yellow);
-            // SetLine6(image, t2, t0, Rgba32.Red);
+
+            segmentHeight = t2.y - t1.y ;
+            for (var y = t2.y; y > t1.y; y--)
+            {
+                float stepTotal = (float) (t2.y - y) / totalHeight;
+                int2 a = t2 + (int2)((t0 - t2) * stepTotal);
+                
+                float stepSegment = (float) (t2.y - y) / segmentHeight;
+                int2 b = t2 + (int2)((t1 - t2) * stepSegment);
+                
+                image[a.x, y] = Rgba32.Red;
+                image[b.x, y] = Rgba32.Yellow;
+
+                SetLine6(image, new int2(a.x, y), new int2(b.x, y), Rgba32.Blue);
+            }
+            SetLine6(image, t0, t1, Rgba32.Yellow);
+            SetLine6(image, t1, t2, Rgba32.Yellow);
+            SetLine6(image, t2, t0, Rgba32.Red);
         }
     }
 }
