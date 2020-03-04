@@ -232,42 +232,34 @@ namespace TinyRendererConsoleApp
 
         public static void Triangle(math.int2 t0, math.int2 t1, math.int2 t2, Image<Rgba32> image, Rgba32 color) 
         {
+            if (t0.y == t1.y && t0.y == t2.y) return;
+            
             // sort
             if (t0.y > t1.y) (t0, t1) = (t1, t0);
             if (t0.y > t2.y) (t0, t2) = (t2, t0);
             if (t1.y > t2.y) (t1, t2) = (t2, t1);
 
             int totalHeight = t2.y - t0.y;
-            int segmentHeight = t1.y - t0.y ;
 
-            for (var y = t0.y; y <= t1.y; y++)
+            for (var i = 0; i < totalHeight; i++)
             {
-                float stepTotal = (float) (y - t0.y) / totalHeight;
-                int2 a = t0 + (int2)((t2 - t0) * stepTotal);
-                
-                float stepSegment = (float) (y - t0.y) / segmentHeight;
-                int2 b = t0 + (int2)((t1 - t0) * stepSegment);
-                
-                image[a.x, y] = Rgba32.Red;
-                image[b.x, y] = Rgba32.Yellow;
-                
-                SetLine6(image, new int2(a.x, y), new int2(b.x, y), Rgba32.Blue);
+                bool secondHalf = i > t1.y - t0.y || t1.y == t0.y;
+                int segmentHeight = secondHalf ? t2.y - t1.y : t1.y - t0.y;
+
+                float totalStep = (float)i / totalHeight;
+                float segmentStep = (float)(i - (secondHalf ? t1.y - t0.y : 0)) / segmentHeight;
+
+                int2 a = t0 + (int2)((t2 - t0) * totalStep);
+                int2 b = secondHalf ? t1 + (int2) ((t2 - t1) * segmentStep) : t0 + (int2) ((t1 - t0) * segmentStep);
+
+                if (a.x > b.x) (a, b) = (b, a);
+
+                for (int j = a.x; j <= b.x; j++)
+                {
+                    image[j, t0.y + i] = Rgba32.Blue;
+                }
             }
 
-            segmentHeight = t2.y - t1.y ;
-            for (var y = t2.y; y > t1.y; y--)
-            {
-                float stepTotal = (float) (t2.y - y) / totalHeight;
-                int2 a = t2 + (int2)((t0 - t2) * stepTotal);
-                
-                float stepSegment = (float) (t2.y - y) / segmentHeight;
-                int2 b = t2 + (int2)((t1 - t2) * stepSegment);
-                
-                image[a.x, y] = Rgba32.Red;
-                image[b.x, y] = Rgba32.Yellow;
-
-                SetLine6(image, new int2(a.x, y), new int2(b.x, y), Rgba32.Blue);
-            }
             SetLine6(image, t0, t1, Rgba32.Yellow);
             SetLine6(image, t1, t2, Rgba32.Yellow);
             SetLine6(image, t2, t0, Rgba32.Red);
