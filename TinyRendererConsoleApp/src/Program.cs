@@ -29,18 +29,21 @@ namespace TinyRendererConsoleApp
 
             // RenderObjFile();
             
-            int2 p0 = new int2(10, 70);
-            int2 p1 = new int2(50, 160);
-            int2 p2 = new int2(70, 80);
-            int2 p3 = new int2(180, 50);
-            int2 p4 = new int2(150, 1);
-            int2 p5 = new int2(70, 180);
-            int2 p6 = new int2(180, 150);
-            int2 p7 = new int2(120, 160);
-            int2 p8 = new int2(130, 180);
-            Renderer.Triangle(p0, p1, p2, image, Rgba32.Red);
-            Renderer.Triangle(p3, p4, p5, image, Rgba32.White);
-            Renderer.Triangle(p6, p7, p8, image, Rgba32.Gold);
+            // int2 p0 = new int2(10, 70);
+            // int2 p1 = new int2(50, 160);
+            // int2 p2 = new int2(70, 80);
+            // int2 p3 = new int2(180, 50);
+            // int2 p4 = new int2(150, 1);
+            // int2 p5 = new int2(70, 180);
+            // int2 p6 = new int2(180, 150);
+            // int2 p7 = new int2(120, 160);
+            // int2 p8 = new int2(130, 180);
+            // Renderer.Triangle(p0, p1, p2, image, Rgba32.Red);
+            // Renderer.Triangle(p3, p4, p5, image, Rgba32.White);
+            // Renderer.Triangle(p6, p7, p8, image, Rgba32.Gold);
+
+            int2[] points = new int2[] {new int2(10, 10), new int2(100, 30), new int2(190, 160)};
+            Renderer.Triangle(points, image, Rgba32.Blue);
             
             // SAVE TO DISK
             var encoder = new PngEncoder()

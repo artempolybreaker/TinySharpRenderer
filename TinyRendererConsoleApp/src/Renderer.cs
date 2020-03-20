@@ -174,7 +174,7 @@ namespace TinyRendererConsoleApp
 
         }
         
-        public static void SetLine6(Image<Rgba32> image, math.int2 p0, math.int2 p1, Rgba32 color)
+        public static void SetLine6(Image<Rgba32> image, int2 p0, int2 p1, Rgba32 color)
         {
             var steep = Math.Abs(p0.x - p1.x) < Math.Abs(p0.y - p1.y);
             if (steep)
@@ -230,7 +230,7 @@ namespace TinyRendererConsoleApp
             }
         }
 
-        public static void Triangle(math.int2 t0, math.int2 t1, math.int2 t2, Image<Rgba32> image, Rgba32 color) 
+        public static void Triangle(int2 t0, int2 t1, int2 t2, Image<Rgba32> image, Rgba32 color) 
         {
             if (t0.y == t1.y && t0.y == t2.y) return;
             
@@ -263,6 +263,49 @@ namespace TinyRendererConsoleApp
             SetLine6(image, t0, t1, Rgba32.Yellow);
             SetLine6(image, t1, t2, Rgba32.Yellow);
             SetLine6(image, t2, t0, Rgba32.Red);
+        }
+
+        public static void Triangle(int2[] points, Image<Rgba32> image, Rgba32 color)
+        {
+            // bounding box
+            var (min, max) = MathUtils.BoundingBox(points);
+            
+            min.x = Math.Clamp(min.x, 0, image.Width);
+            min.y = Math.Clamp(min.y, 0, image.Height);
+            min.x = Math.Clamp(min.x, 0, image.Width);
+            min.x = Math.Clamp(min.x, 0, image.Width);
+
+            for (int x = min.x; x < max.x; x++)
+            {
+                for (int y = min.y; y < max.y; y++)
+                {
+                    var point = new int2(x, y);
+                    
+                    float3 bcScreen = Barycentric(points, point);
+                    if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0) continue;
+                    image[x, y] = color;
+                }
+            }
+
+        }
+
+        private static float3 Barycentric(int2[] points, int2 point)
+        {
+            if (points.Length != 3)
+            {
+                return new float3(-1f, -1f, -1f);
+            }
+
+            var vX = new float3(points[2].x - points[0].x, points[1].x - points[0].x, points[0].x - point.x);
+            var vY = new float3(points[2].y - points[0].y, points[1].y - points[0].y, points[0].y - point.y);
+
+            float3 orth = MathUtils.Cross(vX, vY);
+
+            /* `pts` and `P` has integer value as coordinates
+            so `abs(u[2])` < 1 means `u[2]` is 0, that means
+            triangle is degenerate, in this case return something with negative coordinates */
+            if (Math.Abs(orth.z) < 1) return new float3(-1, 1, 1);
+            return new float3(1f - (orth.x+orth.y)/orth.z, orth.y/orth.z, orth.x/orth.z);
         }
     }
 }
