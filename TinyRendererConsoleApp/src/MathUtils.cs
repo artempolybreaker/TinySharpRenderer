@@ -108,12 +108,23 @@ namespace TinyRendererConsoleApp.math
             return (float) Math.Sqrt(sum);
         }
 
+        public static float3 Normalize(float3 vec)
+        {
+            var length = Magnitude(vec);
+            return new float3(vec.x / length, vec.y / length, vec.z / length);
+        }
+
         public static float3 Cross(float3 a, float3 b)
         {
             var aYZX = new float3(a.y, a.z, a.x);
             var bYZX = new float3(b.y, b.z, b.x);
             var res = (a * bYZX - aYZX * b);
             return new float3(res.y, res.z, res.x);
+        }
+
+        public static float Dot(float3 a, float3 b)
+        {
+            return a.x * b.x + a.y * b.y + a.z * b.z;
         }
     }
 }

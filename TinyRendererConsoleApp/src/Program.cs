@@ -27,7 +27,7 @@ namespace TinyRendererConsoleApp
 
             // Test(image);
 
-            // RenderObjFile();
+            RenderObjFile();
             
             // int2 p0 = new int2(10, 70);
             // int2 p1 = new int2(50, 160);
@@ -42,8 +42,8 @@ namespace TinyRendererConsoleApp
             // Renderer.Triangle(p3, p4, p5, image, Rgba32.White);
             // Renderer.Triangle(p6, p7, p8, image, Rgba32.Gold);
 
-            int2[] points = new int2[] {new int2(10, 10), new int2(100, 30), new int2(190, 160)};
-            Renderer.Triangle(points, image, Rgba32.Blue);
+            // int2[] points = new int2[] {new int2(10, 10), new int2(100, 30), new int2(190, 160)};
+            // Renderer.Triangle(points, image, Rgba32.Blue);
             
             // SAVE TO DISK
             var encoder = new PngEncoder()
@@ -113,32 +113,64 @@ namespace TinyRendererConsoleApp
             //PARSE FILE
             ParseObjFile(vertices, faces);
 
-            //RENDER WIRE
+            
+            var random = new Random(1);
+            //RENDER FILLED COLORED
             for (int i = 0; i < faces.Count; i+=3)
             {
+                int2[] screenCoords = new int2[3];
+                float3[] worldCoords = new float3[3];
                 for (int j = 0; j < 3; j++)
                 {
                     var v0 = vertices[faces[j + i]];
-                    var v1 = vertices[faces[(j + 1) % 3 + i]];
             
-                    int x0 = (int) ((v0.x + 1f) * (width - 1) / 2f);
-                    int y0 = (int) ((v0.y + 1f) * (height - 1) / 2f);
-                    int x1 = (int) ((v1.x + 1f) * (width - 1) / 2f);
-                    int y1 = (int) ((v1.y + 1f) * (height - 1) / 2f);
-            
-                    try
-                    {
-                        Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
-                    }
-                    catch (IndexOutOfRangeException e)
-                    {
-                        Console.Write($"Out of bounds exception, coords were: v0:({x0},{y0}), v1:({x1},{y1})");
-                        return;
-                    }
+                    int x = (int) ((v0.x + 1f) * (width - 1) / 2f);
+                    int y = (int) ((v0.y + 1f) * (height - 1) / 2f);
+                    
+                    screenCoords[j] = new int2(x, y);
+                    worldCoords[j] = v0;
+                }
+
+                var normal = MathUtils.Cross(worldCoords[2] - worldCoords[0], worldCoords[1] - worldCoords[0]);
+                normal = MathUtils.Normalize(normal);
+                var lightDir = new float3(0,0,-1);
+                var intensity = MathUtils.Dot(normal,lightDir);
+                intensity = Math.Clamp(intensity, 0, 1);
+                if (intensity > 0)
+                {
+                    Renderer.Triangle(screenCoords, image, new Rgba32(intensity * (float)random.NextDouble(), intensity * (float)random.NextDouble(), intensity * (float)random.NextDouble()));
                 }
             }
             
-            image.Mutate(new RotateProcessor(180f, new Size(width, height)));
+            
+            // //RENDER WIRE
+            // for (int i = 0; i < faces.Count; i+=3)
+            // {
+            //     int2[] screenCoords = new int2[3];
+            //     for (int j = 0; j < 3; j++)
+            //     {
+            //         var v0 = vertices[faces[j + i]];
+            //         var v1 = vertices[faces[(j + 1) % 3 + i]];
+            //
+            //         int x0 = (int) ((v0.x + 1f) * (width - 1) / 2f);
+            //         int y0 = (int) ((v0.y + 1f) * (height - 1) / 2f);
+            //         int x1 = (int) ((v1.x + 1f) * (width - 1) / 2f);
+            //         int y1 = (int) ((v1.y + 1f) * (height - 1) / 2f);
+            //
+            //         screenCoords[j] = new int2(x0, y0);
+            //         try
+            //         {
+            //             Renderer.SetLine5(image, x0, y0, x1, y1, Rgba32.White);
+            //         }
+            //         catch (IndexOutOfRangeException e)
+            //         {
+            //             Console.Write($"Out of bounds exception, coords were: v0:({x0},{y0}), v1:({x1},{y1})");
+            //             return;
+            //         }
+            //     }
+            // }
+            
+            image.Mutate(new FlipProcessor(FlipMode.Vertical));
             
             // SAVE TO DISK
             var encoder = new PngEncoder()
