@@ -63,7 +63,7 @@ namespace TinyRendererConsoleApp
             using var reader =
                 new StreamReader(
                     File.OpenRead(
-                        "D:/PROJECTS/C#/TinyRenderer/TinyRenderer/TinyRendererConsoleApp/data/objModels/african_head.obj"));
+                        "data/objModels/african_head.obj"));
 
             while (!reader.EndOfStream)
             {
